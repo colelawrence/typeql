@@ -148,6 +148,7 @@ string_enum! { Annotation
     Cardinality = "card",
     Cascade = "cascade",
     Distinct = "distinct",
+    Doc = "doc",
     Independent = "independent",
     Key = "key",
     Range = "range",

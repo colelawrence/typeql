@@ -10,8 +10,8 @@ use super::{
 };
 use crate::{
     annotation::{
-        Abstract, Annotation, Cardinality, CardinalityRange, Cascade, Distinct, Independent, Key, Range, Regex, Subkey,
-        Unique, Values,
+        Abstract, Annotation, Cardinality, CardinalityRange, Cascade, Distinct, Doc, Independent, Key, Range, Regex,
+        Subkey, Unique, Values,
     },
     common::{error::TypeQLError, Spanned},
     value::Literal,
@@ -34,6 +34,7 @@ fn visit_annotation(node: Node<'_>) -> Annotation {
         Rule::ANNOTATION_KEY => Annotation::Key(Key::new(span)),
         Rule::ANNOTATION_UNIQUE => Annotation::Unique(Unique::new(span)),
         Rule::annotation_card => Annotation::Cardinality(visit_annotation_card(child)),
+        Rule::annotation_doc => Annotation::Doc(visit_annotation_doc(child)),
         Rule::annotation_range => Annotation::Range(visit_annotation_range(child)),
         Rule::annotation_regex => Annotation::Regex(visit_annotation_regex(child)),
         Rule::annotation_subkey => Annotation::Subkey(visit_annotation_subkey(child)),
@@ -141,4 +142,34 @@ fn visit_annotation_values(node: Node<'_>) -> Values {
     let span = node.span();
     let values = node.into_children().skip_expected(Rule::ANNOTATION_VALUES).map(visit_value_literal).collect();
     Values::new(span, values)
+}
+
+fn visit_annotation_doc(node: Node<'_>) -> Doc {
+    debug_assert_eq!(node.as_rule(), Rule::annotation_doc);
+    let span = node.span();
+    let mut children = node.into_children();
+    children.skip_expected(Rule::ANNOTATION_DOC);
+    let doc_args = children.consume_expected(Rule::doc_args);
+    let mut args_children = doc_args.into_children();
+
+    let description = args_children
+        .try_consume_expected(Rule::doc_positional)
+        .map(|n| visit_quoted_string_literal(n.into_child()));
+
+    let kwargs: Vec<_> = args_children
+        .filter(|n| n.as_rule() == Rule::doc_kwarg)
+        .map(visit_doc_kwarg)
+        .collect();
+
+    debug_assert_eq!(children.try_consume_any(), None);
+    Doc::new(span, description, kwargs)
+}
+
+fn visit_doc_kwarg(node: Node<'_>) -> (crate::common::identifier::Identifier, Literal) {
+    debug_assert_eq!(node.as_rule(), Rule::doc_kwarg);
+    let mut children = node.into_children();
+    let ident = visit_identifier(children.consume_expected(Rule::identifier));
+    let value = visit_value_literal(children.consume_expected(Rule::value_literal));
+    debug_assert_eq!(children.try_consume_any(), None);
+    (ident, value)
 }

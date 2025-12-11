@@ -341,6 +341,7 @@ annotation = { ANNOTATION_ABSTRACT
              | ANNOTATION_KEY
              | ANNOTATION_UNIQUE
              | annotation_card
+             | annotation_doc
              | annotation_range
              | annotation_regex
              | annotation_subkey
@@ -350,6 +351,11 @@ annotation = { ANNOTATION_ABSTRACT
 annotation_card = { ANNOTATION_CARD ~ PAREN_OPEN ~ ( cardinality_range | cardinality_exact ) ~ PAREN_CLOSE }
 cardinality_range = { integer_literal ~ DOUBLE_DOT ~ integer_literal? }
 cardinality_exact = { integer_literal }
+
+annotation_doc = { ANNOTATION_DOC ~ PAREN_OPEN ~ doc_args ~ PAREN_CLOSE }
+doc_args = { doc_positional? ~ ( COMMA ~ doc_kwarg )* ~ COMMA? }
+doc_positional = { quoted_string_literal }
+doc_kwarg = { identifier ~ ASSIGN ~ value_literal }
 
 annotation_regex = { ANNOTATION_REGEX ~ PAREN_OPEN ~ quoted_string_literal ~ PAREN_CLOSE }
 annotation_subkey = { ANNOTATION_SUBKEY ~ PAREN_OPEN ~ identifier ~ PAREN_CLOSE }
@@ -450,6 +456,7 @@ annotation_category = ${ ANNOTATION_ABSTRACT
                        | ANNOTATION_CARD
                        | ANNOTATION_CASCADE
                        | ANNOTATION_DISTINCT
+                       | ANNOTATION_DOC
                        | ANNOTATION_INDEPENDENT
                        | ANNOTATION_KEY
                        | ANNOTATION_RANGE
@@ -469,6 +476,7 @@ ANNOTATION_UNIQUE = @{ "@unique" ~ WB }
 
 // parametrized
 ANNOTATION_CARD = @{ "@card" ~ WB }
+ANNOTATION_DOC = @{ "@doc" ~ WB }
 ANNOTATION_RANGE = @{ "@range" ~ WB }
 ANNOTATION_REGEX = @{ "@regex" ~ WB }
 ANNOTATION_SUBKEY = @{ "@subkey" ~ WB }

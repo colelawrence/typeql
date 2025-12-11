@@ -18,6 +18,7 @@ pub enum Annotation {
     Cardinality(Cardinality),
     Cascade(Cascade),
     Distinct(Distinct),
+    Doc(Doc),
     Independent(Independent),
     Key(Key),
     Range(Range),
@@ -34,6 +35,7 @@ impl Spanned for Annotation {
             Annotation::Cardinality(annotation) => annotation.span(),
             Annotation::Cascade(annotation) => annotation.span(),
             Annotation::Distinct(annotation) => annotation.span(),
+            Annotation::Doc(annotation) => annotation.span(),
             Annotation::Independent(annotation) => annotation.span(),
             Annotation::Key(annotation) => annotation.span(),
             Annotation::Range(annotation) => annotation.span(),
@@ -52,6 +54,7 @@ impl fmt::Display for Annotation {
             Self::Cardinality(inner) => fmt::Display::fmt(inner, f),
             Self::Cascade(inner) => fmt::Display::fmt(inner, f),
             Self::Distinct(inner) => fmt::Display::fmt(inner, f),
+            Self::Doc(inner) => fmt::Display::fmt(inner, f),
             Self::Independent(inner) => fmt::Display::fmt(inner, f),
             Self::Key(inner) => fmt::Display::fmt(inner, f),
             Self::Range(inner) => fmt::Display::fmt(inner, f),
@@ -169,6 +172,45 @@ impl Spanned for Distinct {
 impl fmt::Display for Distinct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "@{}", token::Annotation::Distinct)
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Doc {
+    pub span: Option<Span>,
+    pub description: Option<StringLiteral>,
+    pub kwargs: Vec<(Identifier, Literal)>,
+}
+
+impl Doc {
+    pub fn new(span: Option<Span>, description: Option<StringLiteral>, kwargs: Vec<(Identifier, Literal)>) -> Self {
+        Self { span, description, kwargs }
+    }
+}
+
+impl Spanned for Doc {
+    fn span(&self) -> Option<Span> {
+        self.span
+    }
+}
+
+impl fmt::Display for Doc {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "@{}(", token::Annotation::Doc)?;
+        let mut first = true;
+        if let Some(desc) = &self.description {
+            write!(f, "\"{}\"", desc.value.replace('\\', "\\\\").replace('"', "\\\""))?;
+            first = false;
+        }
+        for (key, value) in &self.kwargs {
+            if !first {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}={}", key, value)?;
+            first = false;
+        }
+        f.write_char(')')?;
+        Ok(())
     }
 }
 

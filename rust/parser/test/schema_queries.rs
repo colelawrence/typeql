@@ -167,3 +167,56 @@ fn undefine_attribute_type_regex() {
     // let expected = undefine!(type_("digit").regex(r"\d"));
     assert_valid_eq_repr!(expected, parsed, query);
 }
+
+// @doc annotation tests
+
+#[test]
+fn define_entity_with_doc_description() {
+    let query = r#"define
+entity person @doc("A human being in the system");"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}
+
+#[test]
+fn define_relation_with_doc() {
+    let query = r#"define
+relation employment @doc("Represents a person's employment at a company"),
+    relates employee,
+    relates employer;"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}
+
+#[test]
+fn define_attribute_with_doc() {
+    let query = r#"define
+attribute name @doc("The full name of a person"),
+    value string;"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}
+
+#[test]
+fn define_doc_with_escaped_quotes() {
+    let query = r#"define
+entity person @doc("A \"person\" entity");"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}
+
+#[test]
+fn define_doc_empty_description() {
+    let query = r#"define
+entity person @doc("");"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}
+
+#[test]
+fn define_doc_with_newlines() {
+    let query = r#"define
+entity person @doc("Line 1\nLine 2");"#;
+    let parsed = parse_query(query).unwrap();
+    assert_valid_eq_repr!(expected, parsed, query);
+}

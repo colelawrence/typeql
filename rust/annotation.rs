@@ -199,7 +199,8 @@ impl fmt::Display for Doc {
         write!(f, "@{}(", token::Annotation::Doc)?;
         let mut first = true;
         if let Some(desc) = &self.description {
-            write!(f, "\"{}\"", desc.value.replace('\\', "\\\\").replace('"', "\\\""))?;
+            // StringLiteral's Display already includes quotes
+            write!(f, "{}", desc)?;
             first = false;
         }
         for (key, value) in &self.kwargs {
